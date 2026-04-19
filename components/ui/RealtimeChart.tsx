@@ -10,38 +10,30 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface ChartDataPoint {
-  time: string;
-  co2: number;
-  aqi: number;
-}
 
 interface RealtimeChartProps {
-  data: ChartDataPoint[];
+  data: { time: string; co2: number; aqi: number }[];
 }
 
 export default function RealtimeChart({ data }: RealtimeChartProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Real-time Air Quality Trends</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" angle={-45} textAnchor="end" height={60} />
-            <YAxis yAxisId="left" label={{ value: 'CO₂ (ppm)', angle: -90, position: 'insideLeft' }} />
-            <YAxis yAxisId="right" orientation="right" label={{ value: 'AQI', angle: 90, position: 'insideRight' }} />
-            <Tooltip />
-            <Legend />
-            <Line yAxisId="left" type="monotone" dataKey="co2" stroke="#FF6B6B" strokeWidth={2} name="CO₂" />
-            <Line yAxisId="right" type="monotone" dataKey="aqi" stroke="#4ECDC4" strokeWidth={2} name="AQI" />
-          </LineChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="bg-gray-900/50 backdrop-blur rounded-xl border border-gray-800 p-6">
+      <h3 className="text-white font-semibold mb-4">24-Hour Air Quality Trend</h3>
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+          <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} tickLine={false} />
+          <YAxis yAxisId="left" stroke="#9ca3af" fontSize={12} tickLine={false} />
+          <YAxis yAxisId="right" orientation="right" stroke="#9ca3af" fontSize={12} tickLine={false} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+            labelStyle={{ color: '#f3f4f6' }}
+          />
+          <Legend wrapperStyle={{ color: '#f3f4f6' }} />
+          <Line yAxisId="left" type="monotone" dataKey="co2" stroke="#8b5cf6" strokeWidth={2} dot={false} name="CO₂" />
+          <Line yAxisId="right" type="monotone" dataKey="aqi" stroke="#f59e0b" strokeWidth={2} dot={false} name="AQI" />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
