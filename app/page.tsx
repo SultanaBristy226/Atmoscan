@@ -565,11 +565,11 @@ export default function Dashboard() {
           {/* Footer */}
           <motion.footer initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
             style={{ textAlign: 'center', paddingTop: 24, borderTop: `1px solid ${theme.border}`, color: theme.textMuted, fontSize: 12 }}>
-            <p>© 2025 Atmoscan - IoT Air Quality Monitoring System</p>
+            <p>© 2026 Atmoscan - IoT Air Quality Monitoring and purifying System</p>
             <motion.p style={{ marginTop: 8, fontSize: 11 }}
               animate={{ color: ['#4caf50', '#64ffda', '#4caf50'] }}
               transition={{ duration: 3, repeat: Infinity }}>
-              Real-time IoT Data | Green Initiative | Cloud Sync
+              Real-time IoT Data 
             </motion.p>
           </motion.footer>
         </div>
