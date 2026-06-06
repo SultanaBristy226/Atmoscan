@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI is not defined');
-}
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://atmoscan:atmoscan123@cluster0.hq0csjn.mongodb.net/atmoscan?retryWrites=true&w=majority&appName=Cluster0';
 
 let cached = (global as any).mongoose || { conn: null, promise: null };
 
