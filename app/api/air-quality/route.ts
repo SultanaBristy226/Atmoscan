@@ -1,82 +1,82 @@
-import { NextResponse } from 'next/server';
-import { connectDB } from '@/lib/mongodb';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from 'next/server';
+import { 
+  getDashboardData, 
+  storeData, 
+  setPurifierMode, 
+  setFanSpeed 
+} from '@/lib/data';
+import { AirQualityData } from '@/types/aqi';
 
-// Schema
-const SensorSchema = new mongoose.Schema({
-  aqi: Number,
-  co2: Number,
-  co: Number,
-  temperature: Number,
-  humidity: Number,
-  timestamp: { type: Date, default: Date.now },
-});
-
-const Sensor = mongoose.models.Sensor || mongoose.model('Sensor', SensorSchema);
-
-// GET — Dashboard data 
+// ========== GET: Fetch all dashboard data ==========
 export async function GET() {
   try {
-    await connectDB();
-
-    const latest = await Sensor.findOne().sort({ timestamp: -1 });
-
-    const history = await Sensor.find()
-      .sort({ timestamp: -1 })
-      .limit(24)
-      .lean();
-
-    const historyFormatted = history.reverse().map((d: any) => ({
-      time: new Date(d.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      aqi: d.aqi,
-      co2: d.co2,
-      co: d.co,
-    }));
-
-    if (!latest) {
-      const mockHistory = Array.from({ length: 24 }, (_, i) => ({
-        time: `${i}:00`,
-        aqi: 35 + Math.random() * 80,
-        co2: 380 + Math.random() * 150,
-        co: 1.5 + Math.random() * 4,
-      }));
-
-      return NextResponse.json({
-        current: { aqi: 42, co2: 415, co: 2.3, temperature: 22, humidity: 55 },
-        history: mockHistory,
-      });
-    }
-
-    return NextResponse.json({
-      current: {
-        aqi: latest.aqi,
-        co2: latest.co2,
-        co: latest.co,
-        temperature: latest.temperature,
-        humidity: latest.humidity,
-      },
-      history: historyFormatted,
+    const dashboardData = getDashboardData();
+    return NextResponse.json({ 
+      success: true, 
+      data: dashboardData 
     });
-
   } catch (error) {
-    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch data' },
+      { status: 500 }
+    );
   }
 }
 
-// POST — ESP32 data data flow
-export async function POST(request: Request) {
+// ========== POST: Receive sensor data from ESP32 ==========
+export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-
     const body = await request.json();
-    const { aqi, co2, co, temperature, humidity } = body;
-
-    const sensor = new Sensor({ aqi, co2, co, temperature, humidity });
-    await sensor.save();
-
-    return NextResponse.json({ success: true, message: 'Data saved' });
-
+    
+    // Validate incoming sensor data
+    const sensorData: AirQualityData = {
+      co2: body.co2,
+      co: body.co,
+      temperature: body.temperature,
+      humidity: body.humidity,
+      aqi: body.aqi,
+      level: body.level,
+      advice: body.advice,
+      timestamp: new Date(body.timestamp)
+    };
+    
+    // Store data
+    storeData(sensorData);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Sensor data received successfully' 
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to save data' }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: 'Invalid data format' },
+      { status: 400 }
+    );
+  }
+}
+
+// ========== PUT: Control purifier manually ==========
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    let purifier;
+    
+    if (body.mode) {
+      purifier = setPurifierMode(body.mode);
+    } else if (body.fanSpeed !== undefined) {
+      purifier = setFanSpeed(body.fanSpeed);
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Invalid control command' },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json({ success: true, data: purifier });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: 'Failed to control purifier' },
+      { status: 500 }
+    );
   }
 }

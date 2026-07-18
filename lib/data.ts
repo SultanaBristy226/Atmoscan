@@ -1,92 +1,121 @@
-export interface AirQualityData {
-  id?: string;
-  co2: number;
-  co: number;
-  pm25?: number;
-  temperature: number;
-  humidity: number;
-  timestamp: Date;
-  aqi: number;
-  level?: AQILevel;
-  advice?: string;
-}
+import { 
+  AirQualityData, 
+  PurifierStatus, 
+  AlertMessage, 
+  DashboardData,
+  calculateAQI, 
+  getAQILevel, 
+  getAdvice, 
+  getPurifierLogic, 
+  getAlertMessage
+} from '@/types/aqi';
 
-export type AQILevel = 'good' | 'moderate' | 'unhealthy' | 'hazardous';
-
-export interface PurifierStatus {
-  isOn: boolean;
-  fanSpeed: number;
-  mode: 'AUTO' | 'MANUAL' | 'OFF';
-  filterLife: number;
-}
-
-export interface AlertMessage {
-  id: string;
-  type: 'danger' | 'warning' | 'success' | 'info';
-  title: string;
-  message: string;
-}
-
-export interface DashboardData {
-  current: AirQualityData;
-  purifier: PurifierStatus;
-  alert: AlertMessage | null;
-  history: AirQualityData[];
-}
-
-export const calculateAQI = (co2: number, co: number): number => {
-  let aqi = (co2 / 1000) * 50 + (co / 10) * 50;
-  return Math.min(Math.round(aqi), 500);
+// ========== DATA STORAGE (In-Memory) ==========
+let currentData: AirQualityData | null = null;
+let historyData: AirQualityData[] = [];
+let purifierStatus: PurifierStatus = {
+  isOn: false,
+  fanSpeed: 0,
+  mode: 'AUTO',
+  filterLife: 85
 };
+let lastAlert: AlertMessage | null = null;
 
-export const getAQILevel = (aqi: number): AQILevel => {
-  if (aqi <= 50) return 'good';
-  if (aqi <= 100) return 'moderate';
-  if (aqi <= 150) return 'unhealthy';
-  return 'hazardous';
-};
-
-export const getAQIColor = (level: AQILevel): string => {
-  switch (level) {
-    case 'good': return '#4CAF50';
-    case 'moderate': return '#FFC107';
-    case 'unhealthy': return '#FF9800';
-    case 'hazardous': return '#f44336';
+// ========== SENSOR DATA COLLECTION ==========
+const generateSensorData = (): Omit<AirQualityData, 'aqi' | 'level' | 'advice'> => {
+  const hour = new Date().getHours();
+  let co2Base = 400;
+  let coBase = 10;
+  
+  // Peak hours (morning and evening rush)
+  if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
+    co2Base += 80;
+    coBase += 15;
   }
-};
-
-export const getAdvice = (aqi: number): string => {
-  if (aqi <= 50) return 'Air quality is good. Enjoy outdoor activities.';
-  if (aqi <= 100) return 'Air quality is moderate. Sensitive groups should limit outdoor exposure.';
-  if (aqi <= 150) return 'Air quality is unhealthy. Wear a mask outdoors.';
-  return 'Air quality is hazardous. Stay indoors and use air purifier.';
-};
-
-export const getPurifierLogic = (aqi: number): { isOn: boolean; fanSpeed: number } => {
-  if (aqi <= 50) return { isOn: false, fanSpeed: 0 };
-  if (aqi <= 100) return { isOn: true, fanSpeed: 30 };
-  if (aqi <= 150) return { isOn: true, fanSpeed: 60 };
-  return { isOn: true, fanSpeed: 100 };
-};
-
-export const getAlertMessage = (aqi: number): AlertMessage | null => {
-  if (aqi <= 50) return null;
-  if (aqi <= 100) return {
-    id: Date.now().toString(),
-    type: 'warning',
-    title: 'Moderate Air Quality',
-    message: 'Air quality is moderate. Consider reducing outdoor activities.',
-  };
-  if (aqi <= 150) return {
-    id: Date.now().toString(),
-    type: 'danger',
-    title: 'Unhealthy Air Quality',
-    message: 'Air quality is unhealthy. Wear a mask and stay indoors.',
-  };
+  // Afternoon dip
+  else if (hour >= 12 && hour <= 14) {
+    co2Base += 30;
+    coBase += 5;
+  }
+  
   return {
-    id: Date.now().toString(),
-    type: 'danger',
-    title: 'Hazardous Air Quality',
-    message: 'Air quality is hazardous! Stay indoors immediately.',
+    co2: co2Base + Math.floor(Math.random() * 60),
+    co: coBase + Math.floor(Math.random() * 15),
+    temperature: 22 + Math.floor(Math.random() * 10),
+    humidity: 45 + Math.floor(Math.random() * 30),
+    timestamp: new Date()
   };
+};
+
+// ========== AIR QUALITY ANALYSIS ==========
+export const processSensorData = (): AirQualityData => {
+  const sensorData = generateSensorData();
+  const aqi = calculateAQI(sensorData.co2, sensorData.co);
+  
+  return {
+    ...sensorData,
+    aqi,
+    level: getAQILevel(aqi),
+    advice: getAdvice(aqi)
+  };
+};
+
+// ========== PURIFIER LOGIC ==========
+export const updatePurifierLogic = (aqi: number): PurifierStatus => {
+  const logic = getPurifierLogic(aqi);
+  return {
+    ...purifierStatus,
+    isOn: logic.isOn,
+    fanSpeed: logic.fanSpeed,
+    mode: 'AUTO'
+  };
+};
+
+// ========== ALERT GENERATION ==========
+export const generateAlert = (aqi: number): AlertMessage | null => {
+  return getAlertMessage(aqi);
+};
+
+// ========== ✅ GET COMPLETE DASHBOARD DATA (এই ফাংশনটা যোগ করো) ==========
+export const getDashboardData = (): DashboardData => {
+  const newData = processSensorData();
+  currentData = newData;
+  historyData = [newData, ...historyData].slice(0, 24);
+  purifierStatus = updatePurifierLogic(newData.aqi);
+  lastAlert = generateAlert(newData.aqi);
+  
+  return {
+    current: currentData,
+    purifier: purifierStatus,
+    alert: lastAlert,
+    history: historyData
+  };
+};
+
+// ========== DATA STORAGE ==========
+export const storeData = (data: AirQualityData): void => {
+  console.log('📊 Data stored:', data);
+};
+
+// ========== GET HISTORY DATA ==========
+export const getHistoryData = (): AirQualityData[] => {
+  return historyData;
+};
+
+// ========== MANUAL PURIFIER CONTROL ==========
+export const setPurifierMode = (mode: 'AUTO' | 'MANUAL' | 'OFF'): PurifierStatus => {
+  purifierStatus = { ...purifierStatus, mode };
+  return purifierStatus;
+};
+
+export const setFanSpeed = (speed: number): PurifierStatus => {
+  if (speed >= 0 && speed <= 100) {
+    purifierStatus = { 
+      ...purifierStatus, 
+      fanSpeed: speed, 
+      isOn: speed > 0, 
+      mode: 'MANUAL' 
+    };
+  }
+  return purifierStatus;
 };
