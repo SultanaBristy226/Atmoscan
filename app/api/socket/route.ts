@@ -11,7 +11,6 @@ interface SensorData {
   humidity: number;
   timestamp: string;
 }
-
 let currentData: SensorData = {
   aqi: 0,
   co2: 0,
