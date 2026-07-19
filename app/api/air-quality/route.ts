@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Validate required fields
     const required = ['aqi', 'co2', 'co', 'temperature', 'humidity'];
     for (const field of required) {
       if (body[field] === undefined) {
@@ -87,10 +88,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calculate if not provided
     const aqi = body.aqi || calculateAQI(body.co2, body.co);
     const level = body.level || getAQILevel(aqi);
     const advice = body.advice || getAdvice(aqi);
 
+    // Save to database
     await connectToDatabase();
     const newData = await AirQuality.create({
       aqi,
@@ -120,3 +123,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
