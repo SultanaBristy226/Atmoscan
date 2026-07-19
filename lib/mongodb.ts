@@ -1,16 +1,27 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://atmoscan:atmoscan123@cluster0.hq0csjn.mongodb.net/atmoscan?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI as string;
 
-let cached = (global as any).mongoose || { conn: null, promise: null };
+if (!MONGODB_URI) {
+  throw new Error('Please define MONGODB_URI environment variable');
+}
 
-export async function connectDB() {
-  if (cached.conn) return cached.conn;
+let cached = (global as any).mongoose;
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI);
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+export async function connectToDatabase() {
+  if (cached.conn) {
+    return cached.conn;
   }
 
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
+      return mongoose;
+    });
+  }
   cached.conn = await cached.promise;
   return cached.conn;
 }
