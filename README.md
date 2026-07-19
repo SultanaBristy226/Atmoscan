@@ -164,8 +164,9 @@ Live Demo:https://atmoscan-1ly5.vercel.app/
 | Name | ID | Role |
 |------|-----|------|
 | **Habiba Sultana Bristy** | 1118003 | Team Lead & Frontend,Backend |
-| **Saima Rahman Rabaya** | 1118012 | Hardware  |
-| **Iffat Ara Nowshin** | 1118021 | Documentation & Testing |
+| **Saima Rahman Rabaya** | 1118012 | Documentation & Testing  |
+| **Iffat Ara Nowshin** | 1118021 |  Hardware 
+ |
 
 ### Supervisor
 
@@ -174,13 +175,6 @@ Lecturer, Department of CSE
 Bangladesh Army International University of Science and Technology
 
 ---
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
 ## 🙏 Acknowledgements
 
 - Bangladesh Army International University of Science and Technology
