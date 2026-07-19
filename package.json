@@ -8,13 +8,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.0.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
     "mongoose": "^9.7.4",
     "next": "14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^3.9.2"
+    "recharts": "^3.9.2",
+    "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
     "@types/mongoose": "^5.11.96",
