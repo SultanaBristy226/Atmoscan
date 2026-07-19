@@ -164,9 +164,8 @@ Live Demo:https://atmoscan-1ly5.vercel.app/
 | Name | ID | Role |
 |------|-----|------|
 | **Habiba Sultana Bristy** | 1118003 | Team Lead & Frontend,Backend |
-| **Saima Rahman Rabaya** | 1118012 | Documentation & Testing  |
-| **Iffat Ara Nowshin** | 1118021 |  Hardware 
- |
+| **Saima Rahman Rabaya** | 1118012 | Documentation  |
+| **Iffat Ara Nowshin** | 1118021 |  Hardware & Testing|
 
 ### Supervisor
 
